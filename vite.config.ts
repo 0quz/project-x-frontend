@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core'], // Exclude FFmpeg from optimization
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core', '@ffmpeg/util'], // Exclude FFmpeg from optimization
   },
 })
