@@ -8,3 +8,4 @@ export default defineConfig({
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core', '@ffmpeg/util'], // Exclude FFmpeg from optimization
   },
 })
+

@@ -1,29 +1,34 @@
 import React from "react";
 import { GoogleOAuthProvider, GoogleLogin, googleLogout } from "@react-oauth/google";
 import axios from "axios";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const clientId = "1078855318957-r0h6o0pshoqos0mjdkuoppsv3775s4dq.apps.googleusercontent.com";
 
 interface AuthResponse {
   token: string;
+  username: string | null;
 }
 
-const GoogleAuth: React.FC = () => {
+interface Props {
+  onDone: () => void;
+}
+
+const GoogleAuth: React.FC<Props> = ({ onDone }) => {
+  const navigate = useNavigate();
   const handleSuccess = async (credentialResponse: any) => {
-    try {
       // Send token to backend for verification
       const res = await axios.post<AuthResponse>(
-        "http://localhost:8080/auth/google",
+        "http://localhost:8080/auth/google/login",
         { token: credentialResponse.credential },
         { withCredentials: true }
       );
 
       // Save JWT token from backend
-      localStorage.setItem("token", res.data.token);
-      window.location.href = "/discover";
-    } catch (error) {
-      console.error("Login error", error);
-    }
+      //Cookies.set("token", res.data.token);
+      onDone();
+      navigate("/");
   };
 
   const handleFailure = () => {

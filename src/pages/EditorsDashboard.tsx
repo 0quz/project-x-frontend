@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import type { GetRef, InputRef, TableProps } from 'antd';
-import { Form, Input, Popconfirm, Table, Space, Typography, Card, Button, message, Divider, Skeleton } from 'antd';
+import { Form, Input, Popconfirm, Table, Space, Typography, Card, Button, message } from 'antd';
 import { PlayCircleOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import AudioPlayerWithImage from '../components/AudioPlayer';
-import InfiniteScroll from 'react-infinite-scroll-component';
+import {useParams} from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -19,9 +19,8 @@ interface MyMedia {
     media_name: string;
     url: string;
     audio_url: string;
-    points: number;
+    price: number;
     created_by: string;
-    created_at: string;
 }
 
 interface EditableRowProps {
@@ -110,51 +109,33 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
 type ColumnTypes = Exclude<TableProps<MyMedia>['columns'], undefined>;
 
 const App: React.FC = () => {
+    const {username} = useParams();
     const [myMedia, setMyMedia] = useState<MyMedia[]>([]);
     const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-
-    const fetchMyMedia = async () => {
-        setLoading(true);
-        console.log(myMedia.length > 0 ? myMedia[myMedia.length - 1].created_at : undefined)
-        try {
-            const res = await axios.get<MyMedia[]>('http://localhost:8080/users/my-media', {
-                headers: {"Authorization" : `Bearer ${Cookies.get("token")}`},
-                params: { 
-                    lastTimestamp: myMedia.length > 0 ? myMedia[myMedia.length - 1].created_at : undefined
-                }
-            });
-            
-            if (res.data.length === 0) {
-                setHasMore(false);
-            } else {
-                console.log(myMedia);
-                //setMyMedia(prev => timestamp ? [...prev, ...res.data] : res.data);
-                setMyMedia(prev => [...prev, ...res.data]);
-            }
-        } catch (error) {
-            message.error('Failed to fetch media');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
+        const fetchMyMedia = async() => {
+            setLoading(true);
+            try {
+                const res = await axios.get<MyMedia[]>(`http://localhost:8080/users/media/${username}`, 
+                    {headers: {"Authorization" : `Bearer ${Cookies.get("token")}`}}
+                );
+                setMyMedia(res.data);
+            } catch (error) {
+                message.error('Failed to fetch media');
+            } finally {
+                setLoading(false);
+            }
+        }
         fetchMyMedia();
     }, []);
-
-    const loadMoreData = () => {
-        if (loading) return;
-        fetchMyMedia();
-    };
 
     const handleDelete = async (id: string) => {
         try {
             const config = {
                 headers: { "Authorization": `Bearer ${Cookies.get("token")}` },
-                data: { id: id }
             };
-            await axios.delete<{id: string}>('http://localhost:8080/users/my-media', config);
+            await axios.delete<{id: string}>(`http://localhost:8080/users/media/${username}/${id}`, config);
             const newData = myMedia.filter((item) => item.id !== id);
             setMyMedia(newData);
             message.success('Media deleted successfully');
@@ -167,7 +148,7 @@ const App: React.FC = () => {
         try {
             await axios.post<{media: MyMedia}>(
                 'http://localhost:8080/media/player', 
-                {media: media, test: false}, 
+                {media: media, username: username, test: true}, 
                 {headers: {"Authorization" : `Bearer ${Cookies.get("token")}`}}
             );
             message.success('Test media played successfully');
@@ -212,7 +193,7 @@ const App: React.FC = () => {
             title: 'Price',
             dataIndex: 'price',
             editable: true,
-            render: (price) => <Typography.Text>{price}</Typography.Text>
+            render: (price) => <Typography.Text>${price}</Typography.Text>
         },
         {
             title: 'Created Date',
@@ -222,9 +203,10 @@ const App: React.FC = () => {
         {
             title: 'Created By',
             dataIndex: 'created_by',
+            render: (text) => <Typography.Text>{text}</Typography.Text>
         },
         {
-            title: 'Actions',
+            title: 'Action',
             dataIndex: 'action',
             render: (_, record) =>
                 myMedia.length >= 1 ? (
@@ -252,11 +234,10 @@ const App: React.FC = () => {
     const handleSave = async (row: MyMedia) => {
         try {
             await axios.post<MyMedia>(
-                'http://localhost:8080/users/my-media', 
+                `http://localhost:8080/users/media/${username}/${row.id}`, 
                 row, 
                 {headers: {"Authorization" : `Bearer ${Cookies.get("token")}`}}
             );
-            console.log(row);
             const newData = [...myMedia];
             const index = newData.findIndex((item) => row.id === item.id);
             const item = newData[index];
@@ -293,38 +274,25 @@ const App: React.FC = () => {
 
     return (
         <Card>
-            <Title level={4} style={{ marginBottom: 24 }}>My Media Library</Title>
-            <div
-                id="scrollableDiv"
-                style={{
-                    height: '70vh',
-                    overflow: 'auto',
-                    padding: '0 16px',
+            <Title level={4} style={{ marginBottom: 24 }}>Editor's Dashboard</Title>
+            <Table<MyMedia>
+                components={components}
+                rowClassName={() => 'editable-row'}
+                bordered={false}
+                dataSource={myMedia}
+                columns={columns as ColumnTypes}
+                loading={loading}
+                pagination={{
+                    pageSize: 5,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Total ${total} items`
                 }}
-            >
-                <InfiniteScroll
-                    dataLength={myMedia.length}
-                    next={loadMoreData}
-                    hasMore={hasMore}
-                    loader={<Skeleton avatar paragraph={{ rows: 1 }} active />}
-                    endMessage={<Divider plain>No more media to load</Divider>}
-                    scrollableTarget="scrollableDiv"
-                >
-                    <Table<MyMedia>
-                        components={components}
-                        rowClassName={() => 'editable-row'}
-                        bordered={false}
-                        dataSource={myMedia}
-                        columns={columns as ColumnTypes}
-                        pagination={false}
-                        style={{
-                            backgroundColor: '#fff',
-                            borderRadius: 8,
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)'
-                        }}
-                    />
-                </InfiniteScroll>
-            </div>
+                style={{ 
+                    backgroundColor: '#fff',
+                    borderRadius: 8,
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)'
+                }}
+            />
         </Card>
     );
 };

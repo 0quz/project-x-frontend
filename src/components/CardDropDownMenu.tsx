@@ -1,56 +1,55 @@
-import React from 'react';
+import React, { use, useEffect } from 'react';
 import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Dropdown, Space } from 'antd';
+import { Dropdown, message, Space } from 'antd';
 import axios from "axios";
+import Cookies from 'js-cookie';
+import { User } from '../pages/Discover';
 
 interface Media {
     id?: number
+    name?: string
+    streamers?: User[]
 }
 
-const App: React.FC<Media> = (Media) => {
+const App: React.FC<Media> = (media) => {
     const items: MenuProps['items'] = [
         {
-          key: '1',
-          label: 'Add for my stream',
-          onClick: () => addMediaToMyStream(Media.id!),
+          key: 'my-user',
+          label: 'Add to my stream',
+          onClick: () => addMediaToMyStream(media.id!, media.name!),
         },
         {
           type: 'divider',
         },
-        {
-          key: '2',
-          label: 'Profile',
-        //   extra: '⌘P',
-        },
-        {
-          key: '3',
-          label: 'Billing',
-        //   extra: '⌘B',
-        },
-        {
-          key: '4',
-          label: 'Settings',
-        //   icon: <SettingOutlined />,
-        //   extra: '⌘S',
-        }
+        ...((media.streamers ?? []).map((user) => ({
+            key: user.id,
+            label: `Add to ${user.username}`,
+            onClick: () => addMediaToMyStream(media.id!, media.name!, user.id!),
+          })))
     ];
 
     interface MediaUser {
-        media_id: number;
-        email?: string;
+        mediaId: number;
+        mediaName: string;
+        userId?: number;
     }
 
-    const addMediaToMyStream = async (id: number) => {
+    const addMediaToMyStream = async (id: number, name: string, userId?: number) => {
         const newPost: MediaUser = {
-            media_id: id,
-            // email: "oguz.28414@gmail.com"
+            mediaId: id,
+            mediaName: name,
+            userId: userId,
           };
         try {
-            const response = await axios.post("http://localhost:8080/media/add-media-user", newPost);
-            console.log(response.data)
+            const res = await axios.post("http://localhost:8080/media/add-media-user", newPost, {
+                headers: {
+                    'Authorization': `Bearer ${Cookies.get('token')}`
+                },
+            });
             } catch (error) {
-            console.error("Error creating post:", error);
+            const errorMessage = (error as any)?.response?.data?.message || "Failed to add media";
+            message.error(errorMessage);
         }
     }
     return (

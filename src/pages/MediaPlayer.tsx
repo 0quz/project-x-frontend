@@ -7,6 +7,7 @@ interface Media {
   name: string;
   url: string;
   length: string;
+  audio_url: string;
 }
 
 const MediaPlayer = () => {
@@ -27,6 +28,9 @@ const MediaPlayer = () => {
       const data = JSON.parse(event.data);
       setMediaSrc(data.media);
       console.log('Received:', data);
+      setTimeout(() => {
+        setMediaSrc(null);
+      }, data.media.length * 1000);
     };
 
     socket.onclose = () => console.log('Disconnected from WS.');
@@ -41,6 +45,7 @@ const MediaPlayer = () => {
        {mediaSrc ? (
         <div>
           <img src={mediaSrc.url} alt="Triggered GIF" />
+          <audio controls={false} autoPlay={true} src={mediaSrc.audio_url}></audio>
         </div>
       ) : (
         <p>Waiting for media...</p>

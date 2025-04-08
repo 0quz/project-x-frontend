@@ -1,11 +1,12 @@
-import React, { useRef, useState } from "react";
-import { Button } from "antd";
+import React, { useEffect, useRef, useState } from "react";
+import { Button, Image } from "antd";
 import { PlaySquareOutlined, PauseOutlined } from "@ant-design/icons";
 
 export interface Source {
     imageUrl: string;
     audioUrl: string;
-  }
+    style?: any;
+}
 
 const AudioPlayerWithImage: React.FC<Source> = (Source) => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -23,6 +24,15 @@ const AudioPlayerWithImage: React.FC<Source> = (Source) => {
     }
   };
 
+  useEffect(() => {
+    if (!isHovered && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(!isPlaying);
+      }
+    }
+  }, [isHovered]);
+
   return (
     <div
       style={{
@@ -32,19 +42,17 @@ const AudioPlayerWithImage: React.FC<Source> = (Source) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image */}
-      <img
-        src={Source.imageUrl} // Replace with your image URL
+      <Image
+        src={Source.imageUrl}
         alt="Audio Player"
-        style={{
-          width: "200px",
-          height: "200px",
+        style={Source.style ? Source.style : {
+          width: "100%",
+          height: "100%",
           borderRadius: "8px",
           display: "block"
         }}
       />
 
-      {/* Centered Play/Pause Button */}
       {isHovered && (
         <Button
           type="text"
@@ -69,8 +77,9 @@ const AudioPlayerWithImage: React.FC<Source> = (Source) => {
         />
       )}
 
-      {/* Hidden Audio Element */}
-      <audio ref={audioRef} src={Source.audioUrl} />
+      {Source.audioUrl && (
+        <audio ref={audioRef} src={Source.audioUrl} />
+      )}
     </div>
   );
 };

@@ -1,31 +1,64 @@
 import React from "react";
-import { Layout, Avatar, Dropdown, Menu } from "antd";
+import { Layout, Avatar, Dropdown, MenuProps } from "antd";
 import { UserOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const { Header } = Layout;
 
-const UserSettings: React.FC = () => {
-  const menu = (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />}>
-        Profile
-      </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined />}>
-        Settings
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} danger>
-        Logout
-      </Menu.Item>
-    </Menu>
-  );
+interface User {
+    avatar?: string;
+    username?: string;
+}
+
+interface Props {
+  onDone: () => void;
+}
+
+const UserSettings: React.FC<User & Props> = ({ onDone, avatar, username }) => {
+  const items: MenuProps['items'] = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: (
+        "Profile"
+      ),
+    },
+    {
+      key: 'settings',
+      label: (
+        "Settings"
+      ),
+      icon: <SettingOutlined />,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      onClick: async () => {
+        const res = await axios.post("http://localhost:8080/auth/google/logout", {}, {
+          withCredentials: true,
+        })
+        if (res.status === 200) {
+          onDone();
+        }
+      },
+      label: (
+        "Logout"
+      ),
+    }
+  ];
 
   return (
-    <Header style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0 16px", background: "#fff", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" }}>
-      <Dropdown overlay={menu} trigger={["click"]}>
-        <Avatar style={{ cursor: "pointer" }} size="large" icon={<UserOutlined />} />
-      </Dropdown>
-    </Header>
+    <Dropdown menu={{items}} trigger={["click"]}>
+      <Avatar 
+        style={{ 
+          cursor: "pointer",
+          backgroundColor: avatar ? undefined : '#1890ff' 
+        }} 
+        size="large" 
+        src={avatar} 
+        icon={!avatar && <UserOutlined/>} 
+      />
+    </Dropdown>
   );
 };
 
