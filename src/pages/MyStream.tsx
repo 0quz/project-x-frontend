@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import type { GetRef, InputRef, TableProps } from 'antd';
-import { Form, Input, Popconfirm, Table, Space, Typography, Card, Button, message, Divider, Skeleton, Select, Flex } from 'antd';
+import { Form, Popconfirm, Table, Space, Typography, Card, Button, message, Divider, Skeleton, Input, Select, Flex } from 'antd';
 import { PlayCircleOutlined, DeleteOutlined, EditOutlined, SearchOutlined, OrderedListOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie';
 import axios from 'axios';
@@ -17,6 +17,7 @@ const EditableContext = React.createContext<FormInstance<any> | null>(null);
 interface MyMedia {
     id: string;
     name: string;
+    media_name: string;
     url: string;
     audio_url: string;
     points: number;
@@ -119,7 +120,7 @@ const App: React.FC = () => {
     const fetchMyMedia = async () => {
         setLoading(true);
         try {
-            const res = await axios.get<MyMedia[]>('http://localhost:8080/media/my-media', {
+            const res = await axios.get<MyMedia[]>('http://localhost:8080/media/my-stream', {
                 headers: {"Authorization" : `Bearer ${Cookies.get("token")}`},
                 params: { 
                     lastTimestamp: myMedia.length > 0 ? myMedia[myMedia.length - 1].created_at : undefined,
@@ -167,7 +168,7 @@ const App: React.FC = () => {
                 headers: { "Authorization": `Bearer ${Cookies.get("token")}` },
                 data: { id: id }
             };
-            await axios.delete<{id: string}>('http://localhost:8080/media/my-media', config);
+            await axios.delete<{id: string}>('http://localhost:8080/media/my-stream', config);
             const newData = myMedia.filter((item) => item.id !== id);
             setMyMedia(newData);
             message.success('Media deleted successfully');
@@ -175,6 +176,19 @@ const App: React.FC = () => {
             message.error('Failed to delete media');
         }
     };
+
+    const playTestMedia = async (media: MyMedia) => {
+          await axios.post<{media: MyMedia}>(
+              'http://localhost:8080/media/player', 
+              {media: media, test: true}, 
+              {headers: {"Authorization" : `Bearer ${Cookies.get("token")}`}
+          }).then(() => {
+              message.success('Test media played successfully');
+          })
+          .catch((err) => {
+              message.error(err.response.data.message);
+          });
+    }
 
     const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
         {
@@ -203,10 +217,16 @@ const App: React.FC = () => {
         },
         {
             title: 'Name',
-            dataIndex: 'name',
+            dataIndex: 'media_name',
             width: '25%',
             editable: true,
             render: (text) => <Typography.Text strong>{text}</Typography.Text>
+        },
+        {
+            title: 'Price',
+            dataIndex: 'price',
+            editable: true,
+            render: (price) => <Typography.Text>{price}</Typography.Text>
         },
         {
             title: 'Created Date',
@@ -225,6 +245,13 @@ const App: React.FC = () => {
                 <Space size="middle">
                     <Button 
                         type="text" 
+                        icon={<PlayCircleOutlined />}
+                        onClick={() => playTestMedia(record)}
+                    >
+                        Test
+                    </Button>
+                    <Button 
+                        type="text" 
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => handleDelete(record.id)}
@@ -239,7 +266,7 @@ const App: React.FC = () => {
     const handleSave = async (row: MyMedia) => {
         try {
             await axios.post<MyMedia>(
-                'http://localhost:8080/media/my-media', 
+                'http://localhost:8080/media/my-stream', 
                 row, 
                 {headers: {"Authorization" : `Bearer ${Cookies.get("token")}`}}
             );
@@ -280,7 +307,7 @@ const App: React.FC = () => {
 
     return (
         <Card>
-            <Title level={4} style={{ marginBottom: 24 }}>My Media Library</Title>
+            <Title level={4} style={{ marginBottom: 24 }}>My Stream Library</Title>
             
             <Flex 
                 justify="space-between" 
@@ -306,8 +333,8 @@ const App: React.FC = () => {
                     options={[
                         { value: 'created_at DESC', label: 'Newest First' },
                         { value: 'created_at ASC', label: 'Oldest First' },
-                        { value: 'name ASC', label: 'Name (A-Z)' },
-                        { value: 'name DESC', label: 'Name (Z-A)' }
+                        { value: 'media_name ASC', label: 'Name (A-Z)' },
+                        { value: 'media_name DESC', label: 'Name (Z-A)' }
                     ]}
                     onChange={handleSort}
                 />

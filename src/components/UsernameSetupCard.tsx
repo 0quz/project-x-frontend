@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Modal, Card, Typography, Alert } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const { Text } = Typography;
+const { Text, Link } = Typography;
 
-export interface Config {
-  title: string;
-  content: string;
-}
-
-const UsernameSetupCard: React.FC<Config> = (Config) => {
+const UsernameSetupCard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [username, setUsername] = useState('');
 
@@ -18,7 +14,7 @@ const UsernameSetupCard: React.FC<Config> = (Config) => {
     axios.get<{username: string}>("http://localhost:8080/users/username", {
       headers: {"Authorization" : `Bearer ${Cookies.get("token")}`}
     }).then((res) => {
-      setUsername(res.data.username ? res.data.username : '');
+      setUsername(res.data.username);
     });
   }, []);
 
@@ -28,7 +24,7 @@ const UsernameSetupCard: React.FC<Config> = (Config) => {
 
   const handleOk = async () => {
     try {
-      const res = await axios.patch(
+      await axios.patch(
         "http://localhost:8080/users/username",
         { username: username },
         {
@@ -48,61 +44,58 @@ const UsernameSetupCard: React.FC<Config> = (Config) => {
     setIsModalOpen(false);
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/${username}`);
+  };
+
+  const url = `${window.location.origin}/${username}`;
+
   return (
     <Card 
-      title={Config.title || "Username Setup"} 
-      style={{ width: '100%', maxWidth: 400 }}
+      title="Streamer Setup"
+      style={{ width: '100%', maxWidth: 600 }}
     >
-      {!username ? (
-        <>
-          <Alert
-            message="Username Required"
-            description="Setting up a username is required to access your media URLs and share content with editors. Your media will be accessible at: your-domain.com/[username]/media"
-            type="warning"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-          <Button type="primary" onClick={showModal} block>
-            Set Up Username
-          </Button>
-        </>
-      ) : (
-        <>
-          <Alert
-            message="Username Configured"
-            description={
-              <div>
-                <Text>Your content is accessible at:</Text>
-                <Text strong> your-domain.com/{username}</Text>
-                <br />
-                <Text type="secondary">Share this URL with your editors and viewers.</Text>
-              </div>
-            }
-            type="success"
-            showIcon
-          />
-          <Button 
-            type="link" 
-            onClick={showModal} 
-            style={{ padding: '8px 0' }}
-          >
-            Change Username
-          </Button>
-        </>
-      )}
+      <Alert
+        message="Your Media. Share this with your contributors."
+        description={
+          <div style={{ marginTop: 8 }}>
+            <Link href={url} target="_blank" style={{ wordBreak: 'break-all' }}>
+              {url}
+            </Link>
+            <div style={{ marginTop: 8 }}>
+              <Button 
+                icon={<CopyOutlined />}
+                type="primary"
+                onClick={handleCopy}
+                style={{ marginRight: 8 }}
+              >
+                Copy URL
+              </Button>
+              <Button 
+                type="link" 
+                onClick={showModal}
+              >
+                Change Username
+              </Button>
+            </div>
+          </div>
+        }
+        type="success"
+        showIcon
+      />
 
       <Modal 
-        title={username ? "Change Username" : "Set Up Username"} 
+        title={"Change Username"} 
         open={isModalOpen} 
         onOk={handleOk} 
         onCancel={handleCancel}
-        okText={username ? "Update" : "Set Username"}
+        okText={"Update"}
       >
         <div style={{ marginBottom: 16 }}>
           <Text>
             Your username will be used to create your unique media URL:
             <br />
-            <Text strong>your-domain.com/[username]/media</Text>
+            <Text strong>{window.location.origin}/[username]</Text>
           </Text>
         </div>
         <Input
