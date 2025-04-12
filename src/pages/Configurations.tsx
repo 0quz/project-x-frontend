@@ -1,5 +1,6 @@
 import React from 'react';
 import UsernameSetupCard from '../components/UsernameSetupCard';
+import MediaPlayerUrlCard from '../components/MediaPlayerUrlCard';
 import { LoadingOutlined, SmileOutlined, SolutionOutlined, UserOutlined } from '@ant-design/icons';
 import { Steps } from 'antd';
 
@@ -8,7 +9,8 @@ const App: React.FC = () => {
 
 return (
         <>
-        <UsernameSetupCard title="Media Player Set Up" content="To use media in your stream add username"/>
+        <MediaPlayerUrlCard />
+        <UsernameSetupCard/>
             {/* <Steps
                 current={0}
                 items={[

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState, useEffect } from 'react';
 import { Input, List, Divider, Select, Flex, Skeleton, Empty, Alert, Typography, Space } from 'antd';
+import { theme as antTheme } from 'antd';
 import MediaCard, { Media } from '../components/MediaCard';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Cookies from 'js-cookie';
@@ -22,6 +23,9 @@ const App: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState<boolean>(true);
+
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    const { token: { colorBgContainer } } = antTheme.useToken();
 
     const getMedia = async () => {
         if (!hasMore) return;
@@ -108,59 +112,72 @@ const App: React.FC = () => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>            
-            {error && (
-                <Alert
-                    message="Error"
-                    description={error}
-                    type="error"
-                    closable
-                    onClose={() => setError(null)}
-                    style={{ marginBottom: '16px' }}
-                />
-            )}
-            <Flex 
-                // style={{ 
-                //     position: 'fixed',
-                //     top: 64, // Align with the top navbar
-                //     left: 200, // Match sidebar width
-                //     right: 24, // Add right padding
-                //     padding: '16px 0',
-                //     background: localStorage.getItem('darkMode') === 'true' ? '#141414' : 'white',
-                //     zIndex: 1,
-                //     transition: 'all 0.2s', // Match sidebar transition
-                // }} 
-                justify="space-between" 
-                // align="center" 
-                // wrap="wrap" 
-                // gap={16}
-            >
-                <Search
-                    placeholder="Search media..."
-                    allowClear
-                    enterButton={<SearchOutlined />}
-                    size="large"
-                    style={{ width: '100%', maxWidth: 400 }}
-                    onSearch={searchMedia}
-                    onChange={(e) => !e.target.value && resetMedia()}
-                />
-                
-                <Select
-                    size="large"
-                    style={{ width: '100%', maxWidth: 300 }}
-                    placeholder="Sort by..."
-                    suffixIcon={<OrderedListOutlined />}
-                    defaultValue="created_at DESC"
-                    options={[
-                        { value: 'created_at DESC', label: 'Newest First' },
-                        { value: 'created_at ASC', label: 'Oldest First' },
-                        { value: 'name ASC', label: 'Name (A-Z)' }
-                    ]}
-                    onChange={sortMedia}
-                />
-            </Flex>
+        <div style={{ 
+            position: 'relative', 
+            height: 'calc(100vh - 64px)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+        }}>
+            <div style={{ 
+                position: 'fixed',
+                top: 64,
+                left: 200,
+                right: 0,
+                padding: '24px',
+                background: colorBgContainer,
+                zIndex: 1,
+                borderBottom: `1px solid ${isDarkMode ? '#303030' : '#e8e8e8'}`,
+            }}>
+                {error && (
+                    <Alert
+                        message="Error"
+                        description={error}
+                        type="error"
+                        closable
+                        onClose={() => setError(null)}
+                        style={{ marginBottom: '16px' }}
+                    />
+                )}
+                <Flex 
+                    justify="space-between" 
+                    align="center" 
+                    wrap="wrap" 
+                    gap={16}
+                >
+                    <Search
+                        placeholder="Search media..."
+                        allowClear
+                        enterButton={<SearchOutlined />}
+                        size="large"
+                        style={{ width: '60%', maxWidth: 400 }}
+                        onSearch={searchMedia}
+                        onChange={(e) => !e.target.value && resetMedia()}
+                    />
+                    
+                    <Select
+                        size="large"
+                        style={{ width: '30%', maxWidth: 300 }}
+                        placeholder="Sort by..."
+                        suffixIcon={<OrderedListOutlined />}
+                        defaultValue="created_at DESC"
+                        options={[
+                            { value: 'created_at DESC', label: 'Newest First' },
+                            { value: 'created_at ASC', label: 'Oldest First' },
+                            { value: 'name ASC', label: 'Name (A-Z)' }
+                        ]}
+                        onChange={sortMedia}
+                    />
+                </Flex>
+            </div>
 
-            <div style={{ marginTop: '24px' }}>
+            <div style={{ 
+                marginTop: '120px',
+                height: 'calc(100vh - 184px)', // 64px header + 120px margin
+                overflow: 'auto',
+                padding: '0 24px 24px',
+                background: isDarkMode ? '#141414' : '#f0f2f5',
+            }}>
                 {!loading && media.length === 0 ? (
                     <Empty
                         description="No media found"
@@ -198,7 +215,7 @@ const App: React.FC = () => {
                     </InfiniteScroll>
                 )}
             </div>
-        </Space>
+        </div>
     );
 };
 

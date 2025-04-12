@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Discover from './Discover';
 import Configurations from './Configurations';
 import MyMedia from './MyMedias'
+import MyStream from './MyStream';
 import Credits from './Credits';
 import { useNavigate } from "react-router-dom";
 //import logo from "/public/vite.svg";
@@ -95,8 +96,8 @@ const App: React.FC = () => {
                 setCurrentComponent(<Credits/>)
                 setMenu(items5)
             }
-            else if (path === "/dashboard/my-media") {
-                setCurrentComponent(<MyMedia/>)
+            else if (path === "/dashboard/my-stream") {
+                setCurrentComponent(<MyStream/>)
                 setMenu(items3)
             }
             else if (path === "/dashboard/my-editors") {
@@ -105,6 +106,10 @@ const App: React.FC = () => {
             }
             else if (path === "/dashboard/my-streamers") {
                 setCurrentComponent(<MyStreamers/>)
+                setMenu(items3)
+            }
+            else if (path === "/dashboard/my-media") {
+                setCurrentComponent(<MyMedia/>)
                 setMenu(items3)
             }
             else if (path === `/editor/streamer/${username}`) {
@@ -182,10 +187,10 @@ const App: React.FC = () => {
             onClick: () => updatePath('/configurations')
         },
         {
-            key: '/dashboard/my-media',
-            label: 'My Media',
+            key: '/dashboard/my-stream',
+            label: 'My Stream',
             icon: React.createElement(MediumSquareFilled),
-            onClick: () => updatePath('/dashboard/my-media')
+            onClick: () => updatePath('/dashboard/my-stream')
         },
         {
             key: '/dashboard/my-editors',
@@ -198,6 +203,12 @@ const App: React.FC = () => {
             label: 'My Streamers',
             icon: React.createElement(UserOutlined),
             onClick: () => updatePath('/dashboard/my-streamers')
+        },
+        {
+            key: '/dashboard/my-media',
+            label: 'My Media',
+            icon: React.createElement(MediumSquareFilled),
+            onClick: () => updatePath('/dashboard/my-media')
         },
     ];
 

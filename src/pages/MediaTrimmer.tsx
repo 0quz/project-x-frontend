@@ -225,7 +225,7 @@ const MediaTrimmer: React.FC = () => {
         responseType: 'blob'
       });
       
-      const blob = response.data;
+      const blob = response.data as Blob;
       const trimmedFile = new File([blob], `${mediaName}.${file?.name.split('.').pop() || 'mp4'}`, { type: file?.type });
       
       const formData = new FormData();
